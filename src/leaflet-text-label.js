@@ -9,6 +9,7 @@ function handleTextAreaClick(e) {
 }
 
 function handleTextAreaBlur(e) {
+  this._text = this._textAreaElement.value;
   if (this.getText()) {
     this._guideRect.remove(this._map);
   }
@@ -19,10 +20,12 @@ function handleTextAreaBlur(e) {
   L.DomEvent.off(this._textAreaElement, "mouseup", stopPropagation);
   L.DomEvent.off(this._textAreaElement, "mousemove", stopPropagation);
 
+  this._setViewingSVG();
+
   this.fire("editend", {
     text: this._textAreaElement.value,
     bounds: this._bounds,
-    id: this._uuid
+    id: this._uuid,
   });
 }
 
@@ -41,8 +44,9 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._options = options;
     this._textAreaElement = null;
     this._uuid = uuidv4();
-    this._svgElement = this._createSVG();
+    this._svgElement = this._createEmptySVG();
     this._isEditing = false;
+    this._text = "";
 
     // initialize an empty svg
     L.SVGOverlay.prototype.initialize.call(
@@ -69,7 +73,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
           fillOpacity: 0,
           dashArray: [5, 5],
           weight: 1,
-          pmIgnore: true
+          pmIgnore: true,
         }
       ).addTo(map);
       map.on("mousemove", _mousemove);
@@ -82,9 +86,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
       map.off("mousemove", _mousemove);
       this._bounds = L.latLngBounds(this._corner1, this._corner2);
       this._setWidthHeightBounds(map, this._bounds);
-      this._updateSVG();
       this.setBounds(this._bounds);
-      this._textAreaElement = document.getElementById(this._uuid);
       this.on("click", handleTextAreaClick, this);
       this._edit();
     });
@@ -101,7 +103,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._width = Math.abs(bottomRight.x - topLeft.x);
     this._height = Math.abs(bottomRight.y - topLeft.y);
   },
-  _createSVG: function () {
+  _createEmptySVG: function () {
     const svgElement = document.createElementNS(
       "http://www.w3.org/2000/svg",
       "svg"
@@ -109,7 +111,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     return svgElement;
   },
-  _updateSVG: function () {
+  _setEditSVG: function () {
     this._svgElement.setAttribute(
       "viewBox",
       "0 0 " + this._width + " " + this._height
@@ -119,9 +121,45 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
         <textarea id="${this._uuid}"></textarea>
       </foreignObject>
     `;
+    this._textAreaElement = document.getElementById(this._uuid);
+  },
+  _setViewingSVG: function () {
+    const tSpanArr = this._text
+      .split("\n")
+      .map((part) => {
+        return `<tspan x="0" dy="${part === "" ? `2em` : `1em`}">${
+          part || "&nbsp"
+        }</tspan>`;
+      })
+      .join("\n");
+
+    this._svgElement.innerHTML = `
+      <text
+        id=${this._uuid}
+        x=0
+        y=0
+        textAnchor="middle"
+      >${tSpanArr}</text>
+    `;
+    this._updateSVGTransform();
+  },
+  _updateSVGTransform: function () {
+    const textNode = document.getElementById(this._uuid);
+    if (textNode) {
+      const bb = textNode.getBBox();
+      const widthTransform = this._width / bb.width;
+      const heightTransform = this._height / bb.height;
+      this._value =
+        widthTransform < heightTransform ? widthTransform : heightTransform;
+      textNode.style.transform = "scale(" + this._value + ")";
+      textNode.style.transformOrigin = "0px 0px";
+      textNode.style.dominantBaseline = "central";
+    }
   },
   _edit: function () {
     this._isEditing = true;
+    this._setEditSVG();
+    this._textAreaElement.value = this._text;
     this._guideRect.addTo(this._map);
     L.SVGOverlay.prototype.bringToFront.call(this);
     this._map.dragging.disable();
@@ -132,8 +170,8 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     L.DomEvent.on(this._textAreaElement, "blur", handleTextAreaBlur, this);
   },
   getText: function () {
-    return this._textAreaElement.value;
-  }
+    return this._text;
+  },
 });
 
 L.leafletTextLabel = function () {

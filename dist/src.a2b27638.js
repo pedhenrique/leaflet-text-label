@@ -15007,6 +15007,7 @@ function handleTextAreaClick(e) {
   this._edit();
 }
 function handleTextAreaBlur(e) {
+  this._text = this._textAreaElement.value;
   if (this.getText()) {
     this._guideRect.remove(this._map);
   }
@@ -15015,6 +15016,7 @@ function handleTextAreaBlur(e) {
   _leaflet.default.DomEvent.off(this._textAreaElement, "mousedown", stopPropagation);
   _leaflet.default.DomEvent.off(this._textAreaElement, "mouseup", stopPropagation);
   _leaflet.default.DomEvent.off(this._textAreaElement, "mousemove", stopPropagation);
+  this._setViewingSVG();
   this.fire("editend", {
     text: this._textAreaElement.value,
     bounds: this._bounds,
@@ -15035,8 +15037,9 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     this._options = options;
     this._textAreaElement = null;
     this._uuid = (0, _uuid.v4)();
-    this._svgElement = this._createSVG();
+    this._svgElement = this._createEmptySVG();
     this._isEditing = false;
+    this._text = "";
 
     // initialize an empty svg
     _leaflet.default.SVGOverlay.prototype.initialize.call(this, this._svgElement, this._bounds, _objectSpread(_objectSpread({}, this._options), {}, {
@@ -15072,9 +15075,7 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
       map.off("mousemove", _mousemove);
       _this._bounds = _leaflet.default.latLngBounds(_this._corner1, _this._corner2);
       _this._setWidthHeightBounds(map, _this._bounds);
-      _this._updateSVG();
       _this.setBounds(_this._bounds);
-      _this._textAreaElement = document.getElementById(_this._uuid);
       _this.on("click", handleTextAreaClick, _this);
       _this._edit();
     });
@@ -15090,17 +15091,39 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     this._width = Math.abs(bottomRight.x - topLeft.x);
     this._height = Math.abs(bottomRight.y - topLeft.y);
   },
-  _createSVG: function _createSVG() {
+  _createEmptySVG: function _createEmptySVG() {
     var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     svgElement.setAttribute("xmlns", "http://www.w3.org/2000/svg");
     return svgElement;
   },
-  _updateSVG: function _updateSVG() {
+  _setEditSVG: function _setEditSVG() {
     this._svgElement.setAttribute("viewBox", "0 0 " + this._width + " " + this._height);
     this._svgElement.innerHTML = "\n      <foreignObject x=\"0\" y=\"0\" width=\"".concat(this._width, "\" height=\"").concat(this._height, "\">\n        <textarea id=\"").concat(this._uuid, "\"></textarea>\n      </foreignObject>\n    ");
+    this._textAreaElement = document.getElementById(this._uuid);
+  },
+  _setViewingSVG: function _setViewingSVG() {
+    var tSpanArr = this._text.split("\n").map(function (part) {
+      return "<tspan x=\"0\" dy=\"".concat(part === "" ? "2em" : "1em", "\">").concat(part || "&nbsp", "</tspan>");
+    }).join("\n");
+    this._svgElement.innerHTML = "\n      <text\n        id=".concat(this._uuid, "\n        x=0\n        y=0\n        textAnchor=\"middle\"\n      >").concat(tSpanArr, "</text>\n    ");
+    this._updateSVGTransform();
+  },
+  _updateSVGTransform: function _updateSVGTransform() {
+    var textNode = document.getElementById(this._uuid);
+    if (textNode) {
+      var bb = textNode.getBBox();
+      var widthTransform = this._width / bb.width;
+      var heightTransform = this._height / bb.height;
+      this._value = widthTransform < heightTransform ? widthTransform : heightTransform;
+      textNode.style.transform = "scale(" + this._value + ")";
+      textNode.style.transformOrigin = "0px 0px";
+      textNode.style.dominantBaseline = "central";
+    }
   },
   _edit: function _edit() {
     this._isEditing = true;
+    this._setEditSVG();
+    this._textAreaElement.value = this._text;
     this._guideRect.addTo(this._map);
     _leaflet.default.SVGOverlay.prototype.bringToFront.call(this);
     this._map.dragging.disable();
@@ -15111,7 +15134,7 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     _leaflet.default.DomEvent.on(this._textAreaElement, "blur", handleTextAreaBlur, this);
   },
   getText: function getText() {
-    return this._textAreaElement.value;
+    return this._text;
   }
 });
 _leaflet.default.leafletTextLabel = function () {
@@ -15153,7 +15176,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "43449" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38635" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
