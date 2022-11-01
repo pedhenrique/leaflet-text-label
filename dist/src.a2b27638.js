@@ -22414,7 +22414,13 @@ var process = require("process");
   }(), i.o = (t, e) => Object.prototype.hasOwnProperty.call(t, e), i.nmd = t => (t.paths = [], t.children || (t.children = []), t);
   i(414);
 })();
-},{"process":"node_modules/process/browser.js"}],"node_modules/uuid/dist/esm-browser/rng.js":[function(require,module,exports) {
+},{"process":"node_modules/process/browser.js"}],"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":[function(require,module,exports) {
+
+        var reloadCSS = require('_css_loader');
+        module.hot.dispose(reloadCSS);
+        module.hot.accept(reloadCSS);
+      
+},{"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"node_modules/uuid/dist/esm-browser/rng.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23154,63 +23160,12 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 var _leaflet = _interopRequireDefault(require("leaflet"));
 require("@geoman-io/leaflet-geoman-free");
+require("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
 var _uuid = require("uuid");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function handleTextAreaClick(e) {
-  console.log("handleTextAreaClick");
-  _leaflet.default.DomEvent.stopPropagation(e);
-  if (this._isEditing || this._guideRect.pm.dragging()) {
-    return;
-  }
-  this._edit();
-}
-function handleTextAreaBlur(e) {
-  console.log("handleTextAreaBlur");
-  this._text = this._textAreaElement.value;
-  if (this.getText()) {
-    this._guideRect.setStyle({
-      opacity: 0
-    });
-  }
-  this._isEditing = false;
-  this._map.dragging.enable();
-  this._guideRect.pm.enableLayerDrag();
-  this.bringToBack();
-  _leaflet.default.DomEvent.off(this._textAreaElement, "mousedown", stopPropagation);
-  _leaflet.default.DomEvent.off(this._textAreaElement, "mouseup", stopPropagation);
-  _leaflet.default.DomEvent.off(this._textAreaElement, "mousemove", stopPropagation);
-  this._setViewingSVG();
-  this.fire("editend", {
-    text: this._textAreaElement.value,
-    bounds: this._bounds,
-    id: this._uuid
-  });
-}
-function stopPropagation(event) {
-  _leaflet.default.DomEvent.stopPropagation(event);
-}
-function handleDragStart(e) {
-  console.log("handleDragStart");
-  e.layer.setStyle({
-    opacity: 1
-  });
-}
-function handleDragEnd(e) {
-  console.log("handleDragEnd");
-  if (this.getText()) {
-    e.layer.setStyle({
-      opacity: 0
-    });
-  }
-}
-function handleDrag(e) {
-  console.log("handleDrag");
-  this._bounds = e.layer.getBounds();
-  this.setBounds(this._bounds);
-}
 _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
   initialize: function initialize(options) {
     this._corner1 = null;
@@ -23233,15 +23188,9 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
   },
   onAdd: function onAdd(map) {
     var _this = this;
-    var _mousemove = function _mousemove(_ref) {
-      var latlng = _ref.latlng;
-      _this._corner2 = latlng;
-      _this._guideRect.setBounds(_leaflet.default.latLngBounds(_this._corner1, _this._corner2));
-    };
-    map.once("mousedown", function (_ref2) {
-      var latlng = _ref2.latlng;
+    map.once("mousedown", function (e) {
       map.dragging.disable();
-      _this._corner1 = latlng;
+      _this._corner1 = e.latlng;
       _this._guideRect = _leaflet.default.rectangle(_leaflet.default.latLngBounds(_this._corner1, _this._corner1), {
         opacity: 1,
         color: "#000",
@@ -23249,29 +23198,25 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
         dashArray: [5, 5],
         weight: 1
       }).addTo(map);
-      map.on("mousemove", _mousemove);
+      map.on("mousemove", function (_ref) {
+        var latlng = _ref.latlng;
+        _this._corner2 = latlng;
+        _this._guideRect.setBounds(_leaflet.default.latLngBounds(_this._corner1, _this._corner2));
+      });
     });
-    map.once("mouseup", function (_ref3) {
-      var latlng = _ref3.latlng;
+    map.once("mouseup", function (e) {
+      map.off("mousemove");
       map.dragging.enable();
-      _this._corner2 = latlng;
-      map.off("mousemove", _mousemove);
+      _this._corner2 = e.latlng;
       _this._bounds = _leaflet.default.latLngBounds(_this._corner1, _this._corner2);
       _this._setWidthHeightBounds(map, _this._bounds);
       _this.setBounds(_this._bounds);
-      _this._guideRect.on("dblclick", handleTextAreaClick, _this);
-      _this._guideRect.on("pm:dragstart", handleDragStart);
-      _this._guideRect.on("pm:dragend", handleDragEnd, _this);
-      _this._guideRect.on("pm:drag", handleDrag, _this);
+      _this._addEvents();
       _this._edit();
     });
     _leaflet.default.SVGOverlay.prototype.onAdd.call(this, map);
   },
   onRemove: function onRemove(map) {
-    this._guideRect.off("dblclick", handleTextAreaClick, this);
-    this._guideRect.off("pm:dragstart", handleDragStart);
-    this._guideRect.off("pm:dragend", handleDragEnd, this);
-    this._guideRect.off("pm:drag", handleDrag, this);
     this._guideRect.remove();
     _leaflet.default.SVGOverlay.prototype.onRemove(map);
   },
@@ -23310,9 +23255,15 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     }
   },
   _edit: function _edit() {
+    var _this2 = this;
     console.log("edit");
     this._isEditing = true;
     this._guideRect.pm.disableLayerDrag();
+    // this._guideRect.pm.disableRotate();
+    this._guideRect.pm.enable({
+      snappable: false,
+      preventMarkerRemoval: true
+    });
     this.bringToFront();
     this._setEditSVG();
     this._textAreaElement.value = this._text;
@@ -23321,10 +23272,79 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     });
     this._map.dragging.disable();
     this._textAreaElement.focus();
-    _leaflet.default.DomEvent.on(this._textAreaElement, "mousedown", stopPropagation);
-    _leaflet.default.DomEvent.on(this._textAreaElement, "mouseup", stopPropagation);
-    _leaflet.default.DomEvent.on(this._textAreaElement, "mousemove", stopPropagation);
-    _leaflet.default.DomEvent.on(this._textAreaElement, "blur", handleTextAreaBlur, this);
+    _leaflet.default.DomEvent.on(this._textAreaElement, "mousemove", _leaflet.default.DomEvent.stopPropagation);
+    _leaflet.default.DomEvent.disableClickPropagation(this._textAreaElement);
+    this._map.on("click", function (_ref2) {
+      var latlng = _ref2.latlng;
+      if (!_this2._bounds.pad(0.025).contains(latlng)) {
+        _this2._finishEdit();
+      }
+    });
+  },
+  _finishEdit: function _finishEdit() {
+    console.log("finish edit");
+    this._text = this._textAreaElement.value;
+    this._isEditing = false;
+    this._guideRect.pm.enableLayerDrag();
+    // this._guideRect.pm.enableRotate();
+    this._guideRect.pm.disable();
+    this.bringToBack();
+    this._setViewingSVG();
+    if (this.getText()) {
+      this._guideRect.setStyle({
+        opacity: 0
+      });
+    }
+    this._map.dragging.enable();
+    _leaflet.default.DomEvent.off(this._textAreaElement, "mousedown", _leaflet.default.DomEvent.stopPropagation);
+    _leaflet.default.DomEvent.off(this._textAreaElement, "mouseup", _leaflet.default.DomEvent.stopPropagation);
+    _leaflet.default.DomEvent.off(this._textAreaElement, "mousemove", _leaflet.default.DomEvent.stopPropagation);
+    this._map.off("mousedown");
+    this.fire("editend", {
+      text: this._textAreaElement.value,
+      bounds: this._bounds,
+      id: this._uuid
+    });
+  },
+  _addEvents: function _addEvents() {
+    var _this3 = this;
+    this._guideRect.on("dblclick", function (e) {
+      console.log("handledblclick");
+      _leaflet.default.DomEvent.stopPropagation(e);
+      if (_this3._isEditing || _this3._guideRect.pm.dragging()) {
+        return;
+      }
+      _this3._edit();
+    });
+    this._guideRect.on("pm:dragstart", function (e) {
+      console.log("handleDragStart");
+      e.layer.setStyle({
+        opacity: 1
+      });
+    });
+    this._guideRect.on("pm:dragend", function (e) {
+      console.log("handleDragEnd");
+      if (_this3.getText()) {
+        e.layer.setStyle({
+          opacity: 0
+        });
+      }
+    });
+    this._guideRect.on("pm:drag", function (e) {
+      console.log("handleDrag");
+      _this3._bounds = e.layer.getBounds();
+      _this3.setBounds(_this3._bounds);
+    });
+    var handleResize = function handleResize(_ref3) {
+      var layer = _ref3.layer;
+      _this3._bounds = _leaflet.default.latLngBounds(layer.getBounds());
+      _this3._setWidthHeightBounds(_this3._map, _this3._bounds);
+      _this3.setBounds(_this3._bounds);
+      _this3._setEditSVG();
+      _this3._textAreaElement.value = _this3._text;
+    };
+    this._guideRect.on("pm:markerdragend", handleResize);
+    this._guideRect.on("pm:markerdrag", handleResize);
   },
   getText: function getText() {
     return this._text;
@@ -23333,7 +23353,7 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
 _leaflet.default.leafletTextLabel = function () {
   return new _leaflet.default.LeafletTextLabel();
 };
-},{"leaflet":"node_modules/leaflet/dist/leaflet-src.js","@geoman-io/leaflet-geoman-free":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.min.js","uuid":"node_modules/uuid/dist/esm-browser/index.js"}],"src/index.js":[function(require,module,exports) {
+},{"leaflet":"node_modules/leaflet/dist/leaflet-src.js","@geoman-io/leaflet-geoman-free":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.min.js","@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css","uuid":"node_modules/uuid/dist/esm-browser/index.js"}],"src/index.js":[function(require,module,exports) {
 "use strict";
 
 require("./styles.css");
@@ -23369,7 +23389,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38635" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "33817" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

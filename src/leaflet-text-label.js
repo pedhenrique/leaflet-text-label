@@ -1,63 +1,7 @@
 import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
+import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { v4 as uuidv4 } from "uuid";
-
-function handleTextAreaClick(e) {
-  console.log("handleTextAreaClick");
-  L.DomEvent.stopPropagation(e);
-  if (this._isEditing || this._guideRect.pm.dragging()) {
-    return;
-  }
-  this._edit();
-}
-
-function handleTextAreaBlur(e) {
-  console.log("handleTextAreaBlur");
-  this._text = this._textAreaElement.value;
-  if (this.getText()) {
-    this._guideRect.setStyle({ opacity: 0 });
-  }
-  this._isEditing = false;
-  this._map.dragging.enable();
-  this._guideRect.pm.enableLayerDrag();
-  this.bringToBack();
-
-  L.DomEvent.off(this._textAreaElement, "mousedown", stopPropagation);
-  L.DomEvent.off(this._textAreaElement, "mouseup", stopPropagation);
-  L.DomEvent.off(this._textAreaElement, "mousemove", stopPropagation);
-
-  this._setViewingSVG();
-
-  this.fire("editend", {
-    text: this._textAreaElement.value,
-    bounds: this._bounds,
-    id: this._uuid,
-  });
-}
-
-function stopPropagation(event) {
-  L.DomEvent.stopPropagation(event);
-}
-
-function handleDragStart(e) {
-  console.log("handleDragStart");
-  e.layer.setStyle({ opacity: 1 });
-}
-
-function handleDragEnd(e) {
-  console.log("handleDragEnd");
-
-  if (this.getText()) {
-    e.layer.setStyle({ opacity: 0 });
-  }
-}
-
-function handleDrag(e) {
-  console.log("handleDrag");
-
-  this._bounds = e.layer.getBounds();
-  this.setBounds(this._bounds);
-}
 
 L.LeafletTextLabel = L.SVGOverlay.extend({
   initialize: function (options) {
@@ -83,14 +27,9 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     );
   },
   onAdd: function (map) {
-    const _mousemove = ({ latlng }) => {
-      this._corner2 = latlng;
-      this._guideRect.setBounds(L.latLngBounds(this._corner1, this._corner2));
-    };
-
-    map.once("mousedown", ({ latlng }) => {
+    map.once("mousedown", (e) => {
       map.dragging.disable();
-      this._corner1 = latlng;
+      this._corner1 = e.latlng;
       this._guideRect = L.rectangle(
         L.latLngBounds(this._corner1, this._corner1),
         {
@@ -101,30 +40,26 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
           weight: 1,
         }
       ).addTo(map);
-      map.on("mousemove", _mousemove);
+      map.on("mousemove", ({ latlng }) => {
+        this._corner2 = latlng;
+        this._guideRect.setBounds(L.latLngBounds(this._corner1, this._corner2));
+      });
     });
 
-    map.once("mouseup", ({ latlng }) => {
+    map.once("mouseup", (e) => {
+      map.off("mousemove");
       map.dragging.enable();
-      this._corner2 = latlng;
-      map.off("mousemove", _mousemove);
+      this._corner2 = e.latlng;
       this._bounds = L.latLngBounds(this._corner1, this._corner2);
       this._setWidthHeightBounds(map, this._bounds);
       this.setBounds(this._bounds);
-      this._guideRect.on("dblclick", handleTextAreaClick, this);
-      this._guideRect.on("pm:dragstart", handleDragStart);
-      this._guideRect.on("pm:dragend", handleDragEnd, this);
-      this._guideRect.on("pm:drag", handleDrag, this);
+      this._addEvents();
       this._edit();
     });
 
     L.SVGOverlay.prototype.onAdd.call(this, map);
   },
   onRemove: function (map) {
-    this._guideRect.off("dblclick", handleTextAreaClick, this);
-    this._guideRect.off("pm:dragstart", handleDragStart);
-    this._guideRect.off("pm:dragend", handleDragEnd, this);
-    this._guideRect.off("pm:drag", handleDrag, this);
     this._guideRect.remove();
     L.SVGOverlay.prototype.onRemove(map);
   },
@@ -188,19 +123,99 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
   },
   _edit: function () {
     console.log("edit");
-
     this._isEditing = true;
     this._guideRect.pm.disableLayerDrag();
+    // this._guideRect.pm.disableRotate();
+    this._guideRect.pm.enable({ snappable: false, preventMarkerRemoval: true });
     this.bringToFront();
     this._setEditSVG();
     this._textAreaElement.value = this._text;
     this._guideRect.setStyle({ opacity: 1 });
     this._map.dragging.disable();
     this._textAreaElement.focus();
-    L.DomEvent.on(this._textAreaElement, "mousedown", stopPropagation);
-    L.DomEvent.on(this._textAreaElement, "mouseup", stopPropagation);
-    L.DomEvent.on(this._textAreaElement, "mousemove", stopPropagation);
-    L.DomEvent.on(this._textAreaElement, "blur", handleTextAreaBlur, this);
+    L.DomEvent.on(
+      this._textAreaElement,
+      "mousemove",
+      L.DomEvent.stopPropagation
+    );
+    L.DomEvent.disableClickPropagation(this._textAreaElement);
+    this._map.on("click", ({ latlng }) => {
+      if (!this._bounds.pad(0.025).contains(latlng)) {
+        this._finishEdit();
+      }
+    });
+  },
+  _finishEdit: function () {
+    console.log("finish edit");
+    this._text = this._textAreaElement.value;
+    this._isEditing = false;
+    this._guideRect.pm.enableLayerDrag();
+    // this._guideRect.pm.enableRotate();
+    this._guideRect.pm.disable();
+    this.bringToBack();
+    this._setViewingSVG();
+    if (this.getText()) {
+      this._guideRect.setStyle({ opacity: 0 });
+    }
+    this._map.dragging.enable();
+    L.DomEvent.off(
+      this._textAreaElement,
+      "mousedown",
+      L.DomEvent.stopPropagation
+    );
+    L.DomEvent.off(
+      this._textAreaElement,
+      "mouseup",
+      L.DomEvent.stopPropagation
+    );
+    L.DomEvent.off(
+      this._textAreaElement,
+      "mousemove",
+      L.DomEvent.stopPropagation
+    );
+    this._map.off("mousedown");
+
+    this.fire("editend", {
+      text: this._textAreaElement.value,
+      bounds: this._bounds,
+      id: this._uuid,
+    });
+  },
+  _addEvents: function () {
+    this._guideRect.on("dblclick", (e) => {
+      console.log("handledblclick");
+      L.DomEvent.stopPropagation(e);
+      if (this._isEditing || this._guideRect.pm.dragging()) {
+        return;
+      }
+      this._edit();
+    });
+    this._guideRect.on("pm:dragstart", (e) => {
+      console.log("handleDragStart");
+      e.layer.setStyle({ opacity: 1 });
+    });
+    this._guideRect.on("pm:dragend", (e) => {
+      console.log("handleDragEnd");
+      if (this.getText()) {
+        e.layer.setStyle({ opacity: 0 });
+      }
+    });
+    this._guideRect.on("pm:drag", (e) => {
+      console.log("handleDrag");
+      this._bounds = e.layer.getBounds();
+      this.setBounds(this._bounds);
+    });
+
+    const handleResize = ({ layer }) => {
+      this._bounds = L.latLngBounds(layer.getBounds());
+      this._setWidthHeightBounds(this._map, this._bounds);
+      this.setBounds(this._bounds);
+      this._setEditSVG();
+      this._textAreaElement.value = this._text;
+    };
+
+    this._guideRect.on("pm:markerdragend", handleResize);
+    this._guideRect.on("pm:markerdrag", handleResize);
   },
   getText: function () {
     return this._text;
