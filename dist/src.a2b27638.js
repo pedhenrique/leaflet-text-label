@@ -117,62 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
-var bundleURL = null;
-function getBundleURLCached() {
-  if (!bundleURL) {
-    bundleURL = getBundleURL();
-  }
-  return bundleURL;
-}
-function getBundleURL() {
-  // Attempt to find the URL of the current script and use that as the base URL
-  try {
-    throw new Error();
-  } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
-    if (matches) {
-      return getBaseURL(matches[0]);
-    }
-  }
-  return '/';
-}
-function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)?\/[^/]+(?:\?.*)?$/, '$1') + '/';
-}
-exports.getBundleURL = getBundleURLCached;
-exports.getBaseURL = getBaseURL;
-},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
-var bundle = require('./bundle-url');
-function updateLink(link) {
-  var newLink = link.cloneNode();
-  newLink.onload = function () {
-    link.remove();
-  };
-  newLink.href = link.href.split('?')[0] + '?' + Date.now();
-  link.parentNode.insertBefore(newLink, link.nextSibling);
-}
-var cssTimeout = null;
-function reloadCSS() {
-  if (cssTimeout) {
-    return;
-  }
-  cssTimeout = setTimeout(function () {
-    var links = document.querySelectorAll('link[rel="stylesheet"]');
-    for (var i = 0; i < links.length; i++) {
-      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
-        updateLink(links[i]);
-      }
-    }
-    cssTimeout = null;
-  }, 50);
-}
-module.exports = reloadCSS;
-},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"src/styles.css":[function(require,module,exports) {
-var reloadCSS = require('_css_loader');
-module.hot.dispose(reloadCSS);
-module.hot.accept(reloadCSS);
-},{"./images/bin.svg":[["bin.bbfa386d.svg","src/images/bin.svg"],"src/images/bin.svg"],"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"node_modules/leaflet/dist/leaflet-src.js":[function(require,module,exports) {
+})({"node_modules/leaflet/dist/leaflet-src.js":[function(require,module,exports) {
 var define;
 var global = arguments[3];
 /* @preserve
@@ -22414,7 +22359,58 @@ var process = require("process");
   }(), i.o = (t, e) => Object.prototype.hasOwnProperty.call(t, e), i.nmd = t => (t.paths = [], t.children || (t.children = []), t);
   i(414);
 })();
-},{"process":"node_modules/process/browser.js"}],"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":[function(require,module,exports) {
+},{"process":"node_modules/process/browser.js"}],"node_modules/parcel-bundler/src/builtins/bundle-url.js":[function(require,module,exports) {
+var bundleURL = null;
+function getBundleURLCached() {
+  if (!bundleURL) {
+    bundleURL = getBundleURL();
+  }
+  return bundleURL;
+}
+function getBundleURL() {
+  // Attempt to find the URL of the current script and use that as the base URL
+  try {
+    throw new Error();
+  } catch (err) {
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
+    if (matches) {
+      return getBaseURL(matches[0]);
+    }
+  }
+  return '/';
+}
+function getBaseURL(url) {
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)?\/[^/]+(?:\?.*)?$/, '$1') + '/';
+}
+exports.getBundleURL = getBundleURLCached;
+exports.getBaseURL = getBaseURL;
+},{}],"node_modules/parcel-bundler/src/builtins/css-loader.js":[function(require,module,exports) {
+var bundle = require('./bundle-url');
+function updateLink(link) {
+  var newLink = link.cloneNode();
+  newLink.onload = function () {
+    link.remove();
+  };
+  newLink.href = link.href.split('?')[0] + '?' + Date.now();
+  link.parentNode.insertBefore(newLink, link.nextSibling);
+}
+var cssTimeout = null;
+function reloadCSS() {
+  if (cssTimeout) {
+    return;
+  }
+  cssTimeout = setTimeout(function () {
+    var links = document.querySelectorAll('link[rel="stylesheet"]');
+    for (var i = 0; i < links.length; i++) {
+      if (bundle.getBaseURL(links[i].href) === bundle.getBundleURL()) {
+        updateLink(links[i]);
+      }
+    }
+    cssTimeout = null;
+  }, 50);
+}
+module.exports = reloadCSS;
+},{"./bundle-url":"node_modules/parcel-bundler/src/builtins/bundle-url.js"}],"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
@@ -23155,13 +23151,18 @@ var _validate = _interopRequireDefault(require("./validate.js"));
 var _stringify = _interopRequireDefault(require("./stringify.js"));
 var _parse = _interopRequireDefault(require("./parse.js"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./v1.js":"node_modules/uuid/dist/esm-browser/v1.js","./v3.js":"node_modules/uuid/dist/esm-browser/v3.js","./v4.js":"node_modules/uuid/dist/esm-browser/v4.js","./v5.js":"node_modules/uuid/dist/esm-browser/v5.js","./nil.js":"node_modules/uuid/dist/esm-browser/nil.js","./version.js":"node_modules/uuid/dist/esm-browser/version.js","./validate.js":"node_modules/uuid/dist/esm-browser/validate.js","./stringify.js":"node_modules/uuid/dist/esm-browser/stringify.js","./parse.js":"node_modules/uuid/dist/esm-browser/parse.js"}],"src/leaflet-text-label.js":[function(require,module,exports) {
+},{"./v1.js":"node_modules/uuid/dist/esm-browser/v1.js","./v3.js":"node_modules/uuid/dist/esm-browser/v3.js","./v4.js":"node_modules/uuid/dist/esm-browser/v4.js","./v5.js":"node_modules/uuid/dist/esm-browser/v5.js","./nil.js":"node_modules/uuid/dist/esm-browser/nil.js","./version.js":"node_modules/uuid/dist/esm-browser/version.js","./validate.js":"node_modules/uuid/dist/esm-browser/validate.js","./stringify.js":"node_modules/uuid/dist/esm-browser/stringify.js","./parse.js":"node_modules/uuid/dist/esm-browser/parse.js"}],"src/styles.css":[function(require,module,exports) {
+var reloadCSS = require('_css_loader');
+module.hot.dispose(reloadCSS);
+module.hot.accept(reloadCSS);
+},{"./images/bin.svg":[["bin.bbfa386d.svg","src/images/bin.svg"],"src/images/bin.svg"],"_css_loader":"node_modules/parcel-bundler/src/builtins/css-loader.js"}],"src/leaflet-text-label.js":[function(require,module,exports) {
 "use strict";
 
 var _leaflet = _interopRequireDefault(require("leaflet"));
 require("@geoman-io/leaflet-geoman-free");
 require("@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css");
 var _uuid = require("uuid");
+require("./styles.css");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { _defineProperty(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
@@ -23245,6 +23246,9 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     this._popup.remove();
     _leaflet.default.DomUtil.remove(this._svgElement);
     this._guideRect.remove();
+    this.fire("remove", {
+      id: this._uuid
+    });
     _leaflet.default.SVGOverlay.prototype.onRemove.call(this, map);
   },
   _setWidthHeightBounds: function _setWidthHeightBounds(map, bounds) {
@@ -23403,17 +23407,16 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
 _leaflet.default.leafletTextLabel = function (options) {
   return new _leaflet.default.LeafletTextLabel(options);
 };
-},{"leaflet":"node_modules/leaflet/dist/leaflet-src.js","@geoman-io/leaflet-geoman-free":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.min.js","@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css","uuid":"node_modules/uuid/dist/esm-browser/index.js"}],"src/index.js":[function(require,module,exports) {
+},{"leaflet":"node_modules/leaflet/dist/leaflet-src.js","@geoman-io/leaflet-geoman-free":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.min.js","@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css":"node_modules/@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css","uuid":"node_modules/uuid/dist/esm-browser/index.js","./styles.css":"src/styles.css"}],"src/index.js":[function(require,module,exports) {
 "use strict";
 
-require("./styles.css");
 var _leaflet = _interopRequireDefault(require("leaflet"));
 require("./leaflet-text-label");
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 var map = _leaflet.default.map("app").setView([51, -114], 20);
 _leaflet.default.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png").addTo(map);
 var a = _leaflet.default.leafletTextLabel().addTo(map);
-},{"./styles.css":"src/styles.css","leaflet":"node_modules/leaflet/dist/leaflet-src.js","./leaflet-text-label":"src/leaflet-text-label.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"leaflet":"node_modules/leaflet/dist/leaflet-src.js","./leaflet-text-label":"src/leaflet-text-label.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -23438,7 +23441,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55182" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50761" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

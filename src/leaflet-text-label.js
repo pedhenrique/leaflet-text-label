@@ -2,6 +2,7 @@ import L from "leaflet";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { v4 as uuidv4 } from "uuid";
+import "./styles.css";
 
 function handleDelete(_) {
   this.remove();

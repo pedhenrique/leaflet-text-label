@@ -1,4 +1,3 @@
-import "./styles.css";
 import L from "leaflet";
 import "./leaflet-text-label";
 
