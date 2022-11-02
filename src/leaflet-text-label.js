@@ -93,6 +93,9 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._popup.remove();
     L.DomUtil.remove(this._svgElement);
     this._guideRect.remove();
+    this.fire("remove", {
+      id: this._uuid,
+    });
     L.SVGOverlay.prototype.onRemove.call(this, map);
   },
   _setWidthHeightBounds: function (map, bounds) {
