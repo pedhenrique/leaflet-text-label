@@ -10,7 +10,8 @@ body {
 }
 
 textarea {
-  font-style: sans-serif;
+  font-family: sans-serif;
+  font-size: 2em;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -21,4 +22,29 @@ textarea {
   resize: none;
   -webkit-box-shadow: none;
   -moz-box-shadow: none;
+}
+
+.leaflet-text-label-popup .leaflet-popup-tip-container {
+  display: none;
+}
+
+.leaflet-text-label-popup .leaflet-popup-content-wrapper {
+  background: rgb(78, 195, 142);
+  border-radius: 40px;
+}
+
+.leaflet-text-label-popup .leaflet-popup-content {
+  margin: 0px 5px;
+  line-height: 40px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.leaflet-text-label-popup .lealfet-text-label-popup-item-btn {
+  width: 28px;
+  height: 28px;
+  background-image: url("./images/bin.svg");
+  background-size: contain;
 }
