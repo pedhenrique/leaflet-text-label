@@ -23306,7 +23306,7 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
       if (!_this3._bounds.pad(0.025).contains(latlng) && _this3._isEditing) {
         _this3._finishEdit();
       }
-      if (_this3.getText()) {
+      if (_this3.getText() && !_this3._isEditing) {
         _this3._guideRect.setStyle({
           opacity: 0
         });
@@ -23438,7 +23438,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38479" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55182" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

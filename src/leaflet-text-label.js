@@ -175,7 +175,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
       if (!this._bounds.pad(0.025).contains(latlng) && this._isEditing) {
         this._finishEdit();
       }
-      if (this.getText()) {
+      if (this.getText() && !this._isEditing) {
         this._guideRect.setStyle({ opacity: 0 });
       }
     });
