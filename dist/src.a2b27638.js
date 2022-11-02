@@ -23231,7 +23231,11 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
       _this2._setWidthHeightBounds(map, _this2._bounds);
       _this2.setBounds(_this2._bounds);
       _this2._addEvents();
-      _this2._edit();
+      // workaround to prevent the click event being listened on the first edit
+      // I couldnt stop the propagation
+      setTimeout(function () {
+        return _this2._edit();
+      }, 100);
     });
     _leaflet.default.SVGOverlay.prototype.onAdd.call(this, map);
   },
@@ -23241,7 +23245,7 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     this._popup.remove();
     _leaflet.default.DomUtil.remove(this._svgElement);
     this._guideRect.remove();
-    _leaflet.default.SVGOverlay.prototype.onRemove(map);
+    _leaflet.default.SVGOverlay.prototype.onRemove.call(this, map);
   },
   _setWidthHeightBounds: function _setWidthHeightBounds(map, bounds) {
     var topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
@@ -23299,8 +23303,13 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     _leaflet.default.DomEvent.disableClickPropagation(this._textAreaElement);
     this._map.on("click", function (_ref2) {
       var latlng = _ref2.latlng;
-      if (!_this3._bounds.pad(0.025).contains(latlng)) {
+      if (!_this3._bounds.pad(0.025).contains(latlng) && _this3._isEditing) {
         _this3._finishEdit();
+      }
+      if (_this3.getText()) {
+        _this3._guideRect.setStyle({
+          opacity: 0
+        });
       }
     });
   },
@@ -23313,11 +23322,6 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     this._guideRect.pm.disable();
     this.bringToBack();
     this._setViewingSVG();
-    if (this.getText()) {
-      this._guideRect.setStyle({
-        opacity: 0
-      });
-    }
     this._map.dragging.enable();
     _leaflet.default.DomEvent.off(this._textAreaElement, "mousedown", _leaflet.default.DomEvent.stopPropagation);
     _leaflet.default.DomEvent.off(this._textAreaElement, "mouseup", _leaflet.default.DomEvent.stopPropagation);
@@ -23382,13 +23386,14 @@ _leaflet.default.LeafletTextLabel = _leaflet.default.SVGOverlay.extend({
     };
     var handleResizeEnd = function handleResizeEnd(_ref4) {
       var layer = _ref4.layer;
-      _this4._map.openPopup(_this4._popup);
       handleResize({
         layer: layer
       });
+      _this4._popup.setLatLng(getPopupLatLng(_this4._bounds, _this4._map));
+      _this4._map.openPopup(_this4._popup);
     };
     this._guideRect.on("pm:markerdragstart", handleResizeStart);
-    this._guideRect.on("pm:markerdragend", handleResize);
+    this._guideRect.on("pm:markerdragend", handleResizeEnd);
     this._guideRect.on("pm:markerdrag", handleResize);
   },
   getText: function getText() {
@@ -23433,7 +23438,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "40941" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "38479" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

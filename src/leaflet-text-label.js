@@ -80,7 +80,9 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
       this._setWidthHeightBounds(map, this._bounds);
       this.setBounds(this._bounds);
       this._addEvents();
-      this._edit();
+      // workaround to prevent the click event being listened on the first edit
+      // I couldnt stop the propagation
+      setTimeout(() => this._edit(), 100);
     });
 
     L.SVGOverlay.prototype.onAdd.call(this, map);
@@ -91,7 +93,7 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._popup.remove();
     L.DomUtil.remove(this._svgElement);
     this._guideRect.remove();
-    L.SVGOverlay.prototype.onRemove(map);
+    L.SVGOverlay.prototype.onRemove.call(this, map);
   },
   _setWidthHeightBounds: function (map, bounds) {
     const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
@@ -170,8 +172,11 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     );
     L.DomEvent.disableClickPropagation(this._textAreaElement);
     this._map.on("click", ({ latlng }) => {
-      if (!this._bounds.pad(0.025).contains(latlng)) {
+      if (!this._bounds.pad(0.025).contains(latlng) && this._isEditing) {
         this._finishEdit();
+      }
+      if (this.getText()) {
+        this._guideRect.setStyle({ opacity: 0 });
       }
     });
   },
@@ -184,9 +189,6 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._guideRect.pm.disable();
     this.bringToBack();
     this._setViewingSVG();
-    if (this.getText()) {
-      this._guideRect.setStyle({ opacity: 0 });
-    }
     this._map.dragging.enable();
     L.DomEvent.off(
       this._textAreaElement,
@@ -258,12 +260,13 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     };
 
     const handleResizeEnd = ({ layer }) => {
-      this._map.openPopup(this._popup);
       handleResize({ layer });
+      this._popup.setLatLng(getPopupLatLng(this._bounds, this._map));
+      this._map.openPopup(this._popup);
     };
 
     this._guideRect.on("pm:markerdragstart", handleResizeStart);
-    this._guideRect.on("pm:markerdragend", handleResize);
+    this._guideRect.on("pm:markerdragend", handleResizeEnd);
     this._guideRect.on("pm:markerdrag", handleResize);
   },
   getText: function () {
