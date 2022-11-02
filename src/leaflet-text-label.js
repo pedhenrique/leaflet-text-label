@@ -3,6 +3,17 @@ import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
 import { v4 as uuidv4 } from "uuid";
 
+function handleDelete(_) {
+  this.remove();
+}
+
+function getPopupLatLng(bounds, map) {
+  const sePoint = map.latLngToLayerPoint(bounds.getSouthEast());
+  const swPoint = map.latLngToLayerPoint(bounds.getSouthWest());
+  const middleOffset = [(swPoint.x + sePoint.x) / 2, swPoint.y + 50];
+  return map.layerPointToLatLng(middleOffset);
+}
+
 L.LeafletTextLabel = L.SVGOverlay.extend({
   initialize: function (options) {
     this._corner1 = null;
@@ -17,6 +28,21 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._svgElement = this._createEmptySVG();
     this._isEditing = false;
     this._text = "";
+    this._deleteBtn = null;
+    this._popup = L.popup({
+      className: "leaflet-text-label-popup",
+      closeButton: false,
+    })
+      .setLatLng([0, 0])
+      .setContent((layer) => {
+        this._deleteBtn = L.DomUtil.create(
+          "div",
+          "lealfet-text-label-popup-item-btn"
+        );
+        L.DomEvent.on(this._deleteBtn, "click", handleDelete, this);
+
+        return this._deleteBtn;
+      });
 
     // initialize an empty svg
     L.SVGOverlay.prototype.initialize.call(
@@ -60,6 +86,10 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     L.SVGOverlay.prototype.onAdd.call(this, map);
   },
   onRemove: function (map) {
+    L.DomEvent.off(this._deleteBtn, "click", handleDelete, this);
+    L.DomUtil.remove(this._deleteBtn);
+    this._popup.remove();
+    L.DomUtil.remove(this._svgElement);
     this._guideRect.remove();
     L.SVGOverlay.prototype.onRemove(map);
   },
@@ -182,6 +212,13 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     });
   },
   _addEvents: function () {
+    this._guideRect.on("click", (e) => {
+      console.log("handleClick");
+      L.DomEvent.stopPropagation(e);
+      this._guideRect.setStyle({ opacity: 1 });
+      this._popup.setLatLng(getPopupLatLng(this._bounds, this._map));
+      this._map.openPopup(this._popup);
+    });
     this._guideRect.on("dblclick", (e) => {
       console.log("handledblclick");
       L.DomEvent.stopPropagation(e);
@@ -193,12 +230,14 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
     this._guideRect.on("pm:dragstart", (e) => {
       console.log("handleDragStart");
       e.layer.setStyle({ opacity: 1 });
+      this._map.closePopup(this._popup);
     });
     this._guideRect.on("pm:dragend", (e) => {
       console.log("handleDragEnd");
       if (this.getText()) {
         e.layer.setStyle({ opacity: 0 });
       }
+      this._map.closePopup(this._popup);
     });
     this._guideRect.on("pm:drag", (e) => {
       console.log("handleDrag");
@@ -214,6 +253,16 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
       this._textAreaElement.value = this._text;
     };
 
+    const handleResizeStart = (_) => {
+      this._map.closePopup(this._popup);
+    };
+
+    const handleResizeEnd = ({ layer }) => {
+      this._map.openPopup(this._popup);
+      handleResize({ layer });
+    };
+
+    this._guideRect.on("pm:markerdragstart", handleResizeStart);
     this._guideRect.on("pm:markerdragend", handleResize);
     this._guideRect.on("pm:markerdrag", handleResize);
   },
@@ -222,6 +271,6 @@ L.LeafletTextLabel = L.SVGOverlay.extend({
   },
 });
 
-L.leafletTextLabel = function () {
-  return new L.LeafletTextLabel();
+L.leafletTextLabel = function (options) {
+  return new L.LeafletTextLabel(options);
 };
